@@ -37,8 +37,12 @@ app.use("/widget", express.static(widgetDir));
 const dashboardDir = path.join(__dirname, "..", "public", "dashboard");
 app.use(express.static(dashboardDir));
 
-// SPA fallback — any non-API route serves dashboard index.html
-app.get("*", (_req, res) => {
+// SPA fallback — serve dashboard index.html for non-API, non-widget routes
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/widget/")) {
+    res.status(404).send("Not found");
+    return;
+  }
   res.sendFile(path.join(dashboardDir, "index.html"));
 });
 
