@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { initDb } from "./db.js";
 import chatRouter from "./routes/chat.js";
 import appointmentsRouter from "./routes/appointments.js";
@@ -8,6 +10,7 @@ import faqRouter from "./routes/faq.js";
 import settingsRouter from "./routes/settings.js";
 import availabilityRouter from "./routes/availability.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -24,6 +27,19 @@ app.use("/api/availability", availabilityRouter);
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+// Serve frontend widget static files
+const widgetDir = path.join(__dirname, "..", "public", "widget");
+app.use("/widget", express.static(widgetDir));
+
+// Serve dashboard static files (SPA)
+const dashboardDir = path.join(__dirname, "..", "public", "dashboard");
+app.use(express.static(dashboardDir));
+
+// SPA fallback — any non-API route serves dashboard index.html
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(dashboardDir, "index.html"));
 });
 
 // Initialize DB then start server
