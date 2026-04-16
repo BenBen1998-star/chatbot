@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo - Chat Widget</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f7f7f7; color: #333; }
+    .hero { background: linear-gradient(135deg, #0084e6, #004a80); color: white; padding: 80px 20px; text-align: center; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 12px; }
+    .hero p { font-size: 1.1rem; opacity: 0.9; }
+    .content { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card h3 { margin-bottom: 8px; color: #0084e6; }
+    .services { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    .service-item { text-align: center; padding: 20px; background: #f0f8ff; border-radius: 8px; }
+    .service-item .price { color: #0084e6; font-weight: bold; font-size: 1.2rem; }
+    .note { text-align: center; color: #666; margin-top: 40px; padding: 20px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>💇 صالون الجمال</h1>
+    <p>أفضل خدمات التجميل في تونس العاصمة</p>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <h3>🕐 أوقات العمل</h3>
+      <p>الإثنين - السبت: 9:00 صباحاً - 5:00 مساءً</p>
+      <p>الأحد: مغلق</p>
+    </div>
+
+    <div class="card">
+      <h3>💅 خدماتنا</h3>
+      <div class="services">
+        <div class="service-item">
+          <div>✂️ قص شعر</div>
+          <div class="price">25 د.ت</div>
+        </div>
+        <div class="service-item">
+          <div>🎨 صباغة</div>
+          <div class="price">60 د.ت</div>
+        </div>
+        <div class="service-item">
+          <div>💆 ماساج</div>
+          <div class="price">80 د.ت</div>
+        </div>
+        <div class="service-item">
+          <div>💅 مانيكور</div>
+          <div class="price">20 د.ت</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📍 العنوان</h3>
+      <p>شارع الحبيب بورقيبة، تونس العاصمة</p>
+    </div>
+  </div>
+
+  <div class="note">
+    👇 جرّب المساعد الذكي — اضغط على الزرّ الأزرق في أسفل اليمين
+  </div>
+
+  <!-- Embed the chat widget with one script tag -->
+  <script src="http://localhost:5173/src/widget.tsx" type="module" data-api-url="http://localhost:3001/api"></script>
+</body>
+</html>
