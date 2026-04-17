@@ -4,9 +4,9 @@ import {
   IconButton, Button, Textarea, Input, Icon, Flex,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody,
   ModalFooter, ModalCloseButton, useDisclosure, FormControl, FormLabel,
-  SimpleGrid, Collapse,
+  SimpleGrid, Collapse, InputGroup, InputLeftElement,
 } from "@chakra-ui/react";
-import { DeleteIcon, EditIcon, AddIcon, ChevronDownIcon, ChevronUpIcon } from "@chakra-ui/icons";
+import { DeleteIcon, EditIcon, AddIcon, ChevronDownIcon, ChevronUpIcon, SearchIcon } from "@chakra-ui/icons";
 import { FiHelpCircle, FiMessageSquare } from "react-icons/fi";
 import { useTranslation } from "../i18n";
 import { getFaqs, createFaq, updateFaq, deleteFaq, FaqEntry } from "../api";
@@ -86,6 +86,7 @@ export default function FaqPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<FaqEntry | null>(null);
   const [form, setForm] = useState({ question: "", answer: "" });
+  const [search, setSearch] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -128,9 +129,17 @@ export default function FaqPage() {
 
   if (loading) return <Box textAlign="center" py={20}><Spinner size="xl" color="brand.500" thickness="3px" /></Box>;
 
+  const filtered = search.trim()
+    ? faqs.filter(
+        (f) =>
+          f.question.toLowerCase().includes(search.toLowerCase()) ||
+          f.answer.toLowerCase().includes(search.toLowerCase())
+      )
+    : faqs;
+
   return (
     <Box>
-      <HStack justify="space-between" mb={6}>
+      <HStack justify="space-between" mb={4}>
         <Box>
           <Heading size="lg">{t.faq.title}</Heading>
           <Text color="gray.500" fontSize="sm" mt={1}>{faqs.length} {t.faq.question.toLowerCase()}s</Text>
@@ -140,14 +149,32 @@ export default function FaqPage() {
         </Button>
       </HStack>
 
-      {faqs.length === 0 ? (
+      {faqs.length > 0 && (
+        <InputGroup mb={5}>
+          <InputLeftElement pointerEvents="none">
+            <SearchIcon color="gray.400" />
+          </InputLeftElement>
+          <Input
+            placeholder={t.common.search + "..."}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            bg="white"
+            borderRadius="lg"
+            border="1px solid"
+            borderColor="gray.200"
+            _focus={{ borderColor: "brand.400", bg: "white" }}
+          />
+        </InputGroup>
+      )}
+
+      {filtered.length === 0 ? (
         <Box bg="white" borderRadius="xl" border="1px dashed" borderColor="gray.200" p={10} textAlign="center">
           <Icon as={FiHelpCircle} boxSize={10} color="gray.300" mb={3} />
-          <Text color="gray.400">{t.faq.empty}</Text>
+          <Text color="gray.400">{search ? "No results found" : t.faq.empty}</Text>
         </Box>
       ) : (
         <VStack spacing={3} align="stretch">
-          {faqs.map((faq) => (
+          {filtered.map((faq) => (
             <FaqCard
               key={faq.id}
               faq={faq}

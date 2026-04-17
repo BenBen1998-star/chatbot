@@ -1,6 +1,6 @@
-import { Box, Flex, VStack, HStack, Text, IconButton, Button, useDisclosure, Drawer, DrawerOverlay, DrawerContent, DrawerBody, DrawerCloseButton, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Flex, VStack, HStack, Text, IconButton, Button, useDisclosure, Drawer, DrawerOverlay, DrawerContent, DrawerBody, DrawerCloseButton, useBreakpointValue, Icon } from "@chakra-ui/react";
 import { HamburgerIcon } from "@chakra-ui/icons";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { FiCalendar, FiClock, FiHelpCircle, FiSettings } from "react-icons/fi";
 import { useTranslation } from "../i18n";
 
@@ -16,14 +16,27 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
   return (
     <VStack align="stretch" spacing={1} py={5} px={3}>
-      <HStack px={3} mb={6} spacing={2}>
-        <Box bg="brand.500" borderRadius="lg" p={1.5}>
-          <Text fontSize="sm" fontWeight="800" color="white">AI</Text>
+      <HStack px={3} mb={6} spacing={3}>
+        <Box
+          bgGradient="linear(to-br, brand.400, brand.600)"
+          borderRadius="xl"
+          p={2}
+          shadow="md"
+        >
+          <Text fontSize="sm" fontWeight="800" color="white" letterSpacing="tight">AI</Text>
         </Box>
-        <Text fontSize="lg" fontWeight="700" color="gray.800">
-          {t.sidebar.title}
-        </Text>
+        <VStack align="start" spacing={0}>
+          <Text fontSize="md" fontWeight="700" color="gray.800" lineHeight="1.2">
+            {t.sidebar.title}
+          </Text>
+          <Text fontSize="2xs" fontWeight="500" color="gray.400" textTransform="uppercase" letterSpacing="wide">
+            Admin Panel
+          </Text>
+        </VStack>
       </HStack>
+      <Text fontSize="2xs" fontWeight="600" color="gray.400" textTransform="uppercase" letterSpacing="wider" px={3} pb={1}>
+        Menu
+      </Text>
       {NAV_ITEMS.map((item) => (
         <Button
           as={NavLink}
@@ -45,14 +58,34 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           {t.sidebar[item.key]}
         </Button>
       ))}
+      <Box flex={1} />
+      <Box px={3} pt={4} mt={4} borderTop="1px solid" borderColor="gray.100">
+        <Text fontSize="2xs" color="gray.400" textAlign="center">v1.0 &middot; AI Booking</Text>
+      </Box>
     </VStack>
   );
 }
 
 export default function Layout() {
-  const { lang, setLang, dir } = useTranslation();
+  const { lang, setLang, dir, t } = useTranslation();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const location = useLocation();
+
+  const PAGE_ICONS: Record<string, any> = {
+    "/": FiCalendar,
+    "/availability": FiClock,
+    "/faq": FiHelpCircle,
+    "/settings": FiSettings,
+  };
+  const PAGE_TITLES: Record<string, string> = {
+    "/": t.sidebar.appointments,
+    "/availability": t.sidebar.availability,
+    "/faq": t.sidebar.faq,
+    "/settings": t.sidebar.settings,
+  };
+  const pageTitle = PAGE_TITLES[location.pathname] ?? "";
+  const PageIcon = PAGE_ICONS[location.pathname];
 
   return (
     <Flex dir={dir} minH="100vh">
@@ -109,6 +142,12 @@ export default function Layout() {
               variant="ghost"
               onClick={onOpen}
             />
+          )}
+          {pageTitle && (
+            <HStack spacing={2} opacity={isMobile ? 1 : 0.9}>
+              {PageIcon && <Icon as={PageIcon} color="brand.500" boxSize={4} />}
+              <Text fontWeight="600" fontSize="sm" color="gray.700">{pageTitle}</Text>
+            </HStack>
           )}
           <Box flex={1} />
           <HStack spacing={1} bg="gray.100" borderRadius="lg" p={0.5}>

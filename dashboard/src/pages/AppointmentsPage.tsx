@@ -1,10 +1,10 @@
 ﻿import { useEffect, useState, useMemo } from "react";
 import {
   Box, Heading, Text, useToast, Spinner, HStack, IconButton,
-  VStack, Badge, Grid, GridItem, Flex, Icon, Avatar,
+  VStack, Badge, Grid, GridItem, Flex, Icon, Avatar, SimpleGrid,
 } from "@chakra-ui/react";
 import { DeleteIcon, ChevronLeftIcon, ChevronRightIcon } from "@chakra-ui/icons";
-import { FiUser, FiClock, FiCalendar } from "react-icons/fi";
+import { FiUser, FiClock, FiCalendar, FiTrendingUp } from "react-icons/fi";
 import { useTranslation } from "../i18n";
 import { getAppointments, deleteAppointment, Appointment } from "../api";
 
@@ -93,6 +93,11 @@ export default function AppointmentsPage() {
 
   if (loading) return <Box textAlign="center" py={20}><Spinner size="xl" color="brand.500" thickness="3px" /></Box>;
 
+  const thisMonthStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}`;
+  const thisMonthCount = appointments.filter((a) => a.date.startsWith(thisMonthStr)).length;
+  const todayCount = (byDate.get(todayStr) || []).length;
+  const upcomingCount = appointments.filter((a) => a.date > todayStr).length;
+
   return (
     <Box>
       <HStack justify="space-between" mb={6} align="flex-start">
@@ -103,6 +108,43 @@ export default function AppointmentsPage() {
           </Text>
         </Box>
       </HStack>
+
+      {/* Stats Row */}
+      <SimpleGrid columns={{ base: 1, sm: 3 }} spacing={4} mb={6}>
+        <Box bg="white" borderRadius="xl" border="1px solid" borderColor="gray.100" shadow="sm" p={4}>
+          <HStack spacing={3}>
+            <Box bg="brand.50" borderRadius="lg" p={2.5}>
+              <Icon as={FiCalendar} color="brand.500" boxSize={5} />
+            </Box>
+            <Box>
+              <Text fontSize="2xl" fontWeight="700" color="gray.800" lineHeight="1">{appointments.length}</Text>
+              <Text fontSize="xs" color="gray.500" mt={0.5}>{t.appointments.totalAppointments}</Text>
+            </Box>
+          </HStack>
+        </Box>
+        <Box bg="white" borderRadius="xl" border="1px solid" borderColor="gray.100" shadow="sm" p={4}>
+          <HStack spacing={3}>
+            <Box bg="green.50" borderRadius="lg" p={2.5}>
+              <Icon as={FiUser} color="green.500" boxSize={5} />
+            </Box>
+            <Box>
+              <Text fontSize="2xl" fontWeight="700" color="gray.800" lineHeight="1">{todayCount}</Text>
+              <Text fontSize="xs" color="gray.500" mt={0.5}>{t.appointments.today}</Text>
+            </Box>
+          </HStack>
+        </Box>
+        <Box bg="white" borderRadius="xl" border="1px solid" borderColor="gray.100" shadow="sm" p={4}>
+          <HStack spacing={3}>
+            <Box bg="purple.50" borderRadius="lg" p={2.5}>
+              <Icon as={FiTrendingUp} color="purple.500" boxSize={5} />
+            </Box>
+            <Box>
+              <Text fontSize="2xl" fontWeight="700" color="gray.800" lineHeight="1">{upcomingCount}</Text>
+              <Text fontSize="xs" color="gray.500" mt={0.5}>{t.appointments.upcoming}</Text>
+            </Box>
+          </HStack>
+        </Box>
+      </SimpleGrid>
 
       <Flex gap={6} direction={{ base: "column", lg: "row" }}>
         {/* Mini Calendar */}
