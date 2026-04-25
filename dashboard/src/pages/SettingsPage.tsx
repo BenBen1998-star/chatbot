@@ -1,27 +1,24 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Box, Heading, FormControl, FormLabel, Input, Textarea,
-  Button, VStack, useToast, Spinner, Text, HStack, Icon, Flex, Divider,
+  Box, Input, Textarea,
+  Button, VStack, useToast, Spinner, Text, Icon, Flex,
 } from "@chakra-ui/react";
-import { FiSettings, FiUser, FiMessageCircle, FiCpu, FiSave } from "react-icons/fi";
+import { FiUser, FiMessageCircle, FiZap, FiEdit2 } from "react-icons/fi";
 import { useTranslation } from "../i18n";
 import { getSettings, updateSetting } from "../api";
 
 function SettingCard({
-  icon, title, description, children,
+  icon, title, children,
 }: {
-  icon: any; title: string; description?: string; children: React.ReactNode;
+  icon: any; title: string; children: React.ReactNode;
 }) {
   return (
-    <Box bg="white" borderRadius="xl" border="1px solid" borderColor="gray.100" shadow="sm" overflow="hidden">
-      <Flex px={5} py={4} align="center" gap={3} bg="gray.50" borderBottom="1px solid" borderColor="gray.100">
-        <Box bg="brand.50" borderRadius="lg" p={2}>
-          <Icon as={icon} color="brand.500" boxSize={4} />
-        </Box>
-        <Box>
-          <Text fontWeight="600" fontSize="sm">{title}</Text>
-          {description && <Text fontSize="xs" color="gray.500">{description}</Text>}
-        </Box>
+    <Box bg="white" borderRadius="16px" shadow="sm" overflow="hidden" border="1px solid" borderColor="gray.100">
+      <Flex px={5} py={3.5} align="center" gap={2.5} bg="gray.50" borderBottom="1px solid" borderColor="gray.100">
+        <Flex bg="brand.50" borderRadius="8px" w="30px" h="30px" align="center" justify="center" flexShrink={0}>
+          <Icon as={icon} color="brand.500" boxSize={3.5} />
+        </Flex>
+        <Text fontWeight="600" fontSize="13.5px" color="gray.900">{title}</Text>
       </Flex>
       <Box px={5} py={4}>
         {children}
@@ -75,19 +72,24 @@ export default function SettingsPage() {
   if (loading) return <Box textAlign="center" py={20}><Spinner size="xl" color="brand.500" thickness="3px" /></Box>;
 
   return (
-    <Box maxW="720px">
-      <Flex justify="space-between" align="center" mb={6}>
+    <Box maxW="680px">
+      <Flex justify="space-between" align="flex-start" mb={7}>
         <Box>
-          <Heading size="lg">{t.settings.title}</Heading>
-          <Text color="gray.500" fontSize="sm" mt={1}>{t.settings.systemPromptHelp}</Text>
+          <Text fontSize="22px" fontWeight="800" color="gray.900" letterSpacing="-0.03em">{t.settings.title}</Text>
+          <Text color="gray.400" fontSize="13px" mt={1} fontWeight="500">{t.settings.systemPromptHelp}</Text>
         </Box>
         <Button
-          leftIcon={<Icon as={FiSave} />}
-          colorScheme="brand"
+          leftIcon={<Icon as={FiEdit2} />}
+          bg="brand.500"
+          color="white"
           onClick={handleSave}
           isLoading={saving}
-          borderRadius="lg"
-          shadow="sm"
+          borderRadius="10px"
+          fontSize="13px"
+          fontWeight="600"
+          px={4}
+          shadow="0 2px 8px rgba(99,102,241,0.3)"
+          _hover={{ bg: "brand.600", shadow: "0 4px 12px rgba(99,102,241,0.35)" }}
         >
           {t.settings.saveSettings}
         </Button>
@@ -98,7 +100,6 @@ export default function SettingsPage() {
           <Input
             value={form.business_name}
             onChange={(e) => setForm({ ...form, business_name: e.target.value })}
-            borderRadius="lg"
             placeholder="..."
           />
         </SettingCard>
@@ -107,28 +108,23 @@ export default function SettingsPage() {
           <Input
             value={form.welcome_message}
             onChange={(e) => setForm({ ...form, welcome_message: e.target.value })}
-            borderRadius="lg"
             placeholder="..."
           />
         </SettingCard>
 
-        <SettingCard
-          icon={FiCpu}
-          title={t.settings.systemPrompt}
-          description={t.settings.systemPromptHelp}
-        >
+        <SettingCard icon={FiZap} title={t.settings.systemPrompt}>
           <Textarea
             rows={14}
             value={form.system_prompt}
             onChange={(e) => setForm({ ...form, system_prompt: e.target.value })}
             fontFamily="monospace"
             fontSize="sm"
-            borderRadius="lg"
             bg="gray.50"
             border="1px solid"
             borderColor="gray.200"
-            _focus={{ bg: "white", borderColor: "brand.400" }}
+            _focus={{ bg: "white", borderColor: "brand.400", boxShadow: "none" }}
             dir="auto"
+            resize="vertical"
           />
         </SettingCard>
       </VStack>

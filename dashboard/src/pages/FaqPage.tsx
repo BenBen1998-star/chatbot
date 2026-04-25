@@ -1,13 +1,13 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  Box, Heading, Text, useToast, Spinner, HStack, VStack,
-  IconButton, Button, Textarea, Input, Icon, Flex,
+  Box, Text, useToast, Spinner, HStack, VStack,
+  Button, Textarea, Input, Icon, Flex,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody,
   ModalFooter, ModalCloseButton, useDisclosure, FormControl, FormLabel,
-  SimpleGrid, Collapse, InputGroup, InputLeftElement,
+  Collapse, InputGroup, InputLeftElement,
 } from "@chakra-ui/react";
-import { DeleteIcon, EditIcon, AddIcon, ChevronDownIcon, ChevronUpIcon, SearchIcon } from "@chakra-ui/icons";
-import { FiHelpCircle, FiMessageSquare } from "react-icons/fi";
+import { DeleteIcon, EditIcon, AddIcon, SearchIcon } from "@chakra-ui/icons";
+import { FiHelpCircle, FiPlus } from "react-icons/fi";
 import { useTranslation } from "../i18n";
 import { getFaqs, createFaq, updateFaq, deleteFaq, FaqEntry } from "../api";
 
@@ -22,13 +22,13 @@ function FaqCard({ faq, onEdit, onDelete, t }: {
   return (
     <Box
       bg="white"
-      borderRadius="xl"
+      borderRadius="12px"
       border="1px solid"
       borderColor={expanded ? "brand.200" : "gray.100"}
       overflow="hidden"
       shadow="sm"
-      _hover={{ shadow: "md", borderColor: "brand.200" }}
-      transition="all 0.2s"
+      transition="border-color 0.15s"
+      _hover={{ borderColor: "brand.200" }}
     >
       <Flex
         px={5} py={4}
@@ -36,39 +36,34 @@ function FaqCard({ faq, onEdit, onDelete, t }: {
         onClick={() => setExpanded(!expanded)}
         align="center"
         justify="space-between"
+        as="button"
+        w="100%"
+        textAlign="left"
       >
-        <HStack spacing={3} flex={1}>
-          <Box bg="brand.50" borderRadius="lg" p={2} flexShrink={0}>
-            <Icon as={FiHelpCircle} color="brand.500" boxSize={4} />
-          </Box>
-          <Text fontWeight="600" fontSize="sm" noOfLines={expanded ? undefined : 1}>
-            {faq.question}
-          </Text>
-        </HStack>
+        <Text fontWeight="600" fontSize="13.5px" color="gray.900" flex={1} noOfLines={expanded ? undefined : 1}>
+          {faq.question}
+        </Text>
         <Icon
-          as={expanded ? ChevronUpIcon : ChevronDownIcon}
-          color="gray.400" boxSize={5} ml={2} flexShrink={0}
+          as={FiPlus}
+          color="brand.500"
+          boxSize={4}
+          ml={3}
+          flexShrink={0}
+          transform={expanded ? "rotate(45deg)" : "none"}
+          transition="transform 0.2s"
         />
       </Flex>
 
       <Collapse in={expanded} animateOpacity>
-        <Box px={5} pb={4}>
-          <Box bg="gray.50" borderRadius="lg" p={4} mb={3}>
-            <HStack spacing={2} mb={2}>
-              <Icon as={FiMessageSquare} color="gray.400" boxSize={3} />
-              <Text fontSize="xs" fontWeight="600" color="gray.500" textTransform="uppercase">
-                {t.faq.answer}
-              </Text>
-            </HStack>
-            <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap" lineHeight="1.7">
-              {faq.answer}
-            </Text>
-          </Box>
-          <HStack spacing={2} justify="flex-end">
-            <Button size="xs" variant="ghost" leftIcon={<EditIcon />} onClick={onEdit} borderRadius="lg">
+        <Box px={5} pb={4} borderTop="1px solid" borderColor="gray.100" pt={3}>
+          <Text fontSize="13px" color="gray.600" lineHeight="1.7" whiteSpace="pre-wrap">
+            {faq.answer}
+          </Text>
+          <HStack spacing={2} justify="flex-end" mt={3}>
+            <Button size="xs" variant="ghost" leftIcon={<EditIcon />} onClick={onEdit} borderRadius="8px">
               {t.common.edit}
             </Button>
-            <Button size="xs" variant="ghost" colorScheme="red" leftIcon={<DeleteIcon />} onClick={onDelete} borderRadius="lg">
+            <Button size="xs" variant="ghost" colorScheme="red" leftIcon={<DeleteIcon />} onClick={onDelete} borderRadius="8px">
               {t.common.delete}
             </Button>
           </HStack>
@@ -138,19 +133,32 @@ export default function FaqPage() {
     : faqs;
 
   return (
-    <Box>
-      <HStack justify="space-between" mb={4}>
+    <Box maxW="680px">
+      <HStack justify="space-between" mb={1} align="flex-start">
         <Box>
-          <Heading size="lg">{t.faq.title}</Heading>
-          <Text color="gray.500" fontSize="sm" mt={1}>{faqs.length} {t.faq.question.toLowerCase()}s</Text>
+          <Text fontSize="22px" fontWeight="800" color="gray.900" letterSpacing="-0.03em">{t.faq.title}</Text>
+          <Text color="gray.400" fontSize="13px" mt={1} fontWeight="500">
+            {faqs.length} {t.faq.question.toLowerCase()}s
+          </Text>
         </Box>
-        <Button leftIcon={<AddIcon />} colorScheme="brand" onClick={openAdd} borderRadius="lg" shadow="sm">
+        <Button
+          leftIcon={<AddIcon />}
+          bg="brand.500"
+          color="white"
+          onClick={openAdd}
+          borderRadius="10px"
+          fontSize="13px"
+          fontWeight="600"
+          px={4}
+          shadow="0 2px 8px rgba(99,102,241,0.3)"
+          _hover={{ bg: "brand.600", shadow: "0 4px 12px rgba(99,102,241,0.35)" }}
+        >
           {t.faq.addFaq}
         </Button>
       </HStack>
 
       {faqs.length > 0 && (
-        <InputGroup mb={5}>
+        <InputGroup mt={5} mb={5}>
           <InputLeftElement pointerEvents="none">
             <SearchIcon color="gray.400" />
           </InputLeftElement>
@@ -159,21 +167,21 @@ export default function FaqPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             bg="white"
-            borderRadius="lg"
+            borderRadius="8px"
             border="1px solid"
             borderColor="gray.200"
-            _focus={{ borderColor: "brand.400", bg: "white" }}
+            _focus={{ borderColor: "brand.400" }}
           />
         </InputGroup>
       )}
 
       {filtered.length === 0 ? (
-        <Box bg="white" borderRadius="xl" border="1px dashed" borderColor="gray.200" p={10} textAlign="center">
+        <Box bg="white" borderRadius="12px" border="1.5px dashed" borderColor="gray.200" p={10} textAlign="center" mt={faqs.length === 0 ? 6 : 0}>
           <Icon as={FiHelpCircle} boxSize={10} color="gray.300" mb={3} />
-          <Text color="gray.400">{search ? "No results found" : t.faq.empty}</Text>
+          <Text color="gray.400" fontSize="13px">{search ? "No results found" : t.faq.empty}</Text>
         </Box>
       ) : (
-        <VStack spacing={3} align="stretch">
+        <VStack spacing={2.5} align="stretch">
           {filtered.map((faq) => (
             <FaqCard
               key={faq.id}
@@ -188,12 +196,12 @@ export default function FaqPage() {
 
       <Modal isOpen={isOpen} onClose={onClose} size="lg" isCentered>
         <ModalOverlay bg="blackAlpha.400" backdropFilter="blur(4px)" />
-        <ModalContent borderRadius="xl" mx={4}>
+        <ModalContent borderRadius="16px" mx={4}>
           <ModalHeader>
             <HStack spacing={3}>
-              <Box bg="brand.50" borderRadius="lg" p={2}>
+              <Flex bg="brand.50" borderRadius="8px" p={2} align="center" justify="center">
                 <Icon as={FiHelpCircle} color="brand.500" boxSize={5} />
-              </Box>
+              </Flex>
               <Text fontSize="lg" fontWeight="600">
                 {editing ? t.faq.editFaq : t.faq.addFaq}
               </Text>
@@ -207,7 +215,6 @@ export default function FaqPage() {
                 <Input
                   value={form.question}
                   onChange={(e) => setForm({ ...form, question: e.target.value })}
-                  borderRadius="lg"
                   placeholder="..."
                 />
               </FormControl>
@@ -217,15 +224,14 @@ export default function FaqPage() {
                   rows={5}
                   value={form.answer}
                   onChange={(e) => setForm({ ...form, answer: e.target.value })}
-                  borderRadius="lg"
                   placeholder="..."
                 />
               </FormControl>
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" onClick={onClose} borderRadius="lg">{t.common.cancel}</Button>
-            <Button colorScheme="brand" onClick={handleSave} borderRadius="lg" ml={3}>{t.common.save}</Button>
+            <Button variant="ghost" onClick={onClose}>{t.common.cancel}</Button>
+            <Button bg="brand.500" color="white" onClick={handleSave} ml={3} _hover={{ bg: "brand.600" }}>{t.common.save}</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

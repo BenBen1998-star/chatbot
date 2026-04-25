@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat Widget</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Widget shell ── */
+    #cw-root {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    }
+
+    /* ── Toggle button ── */
+    #cw-toggle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #0084e6;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0, 132, 230, 0.45);
+      transition: transform 0.2s, background 0.15s;
+      outline: none;
+    }
+    #cw-toggle:hover { transform: scale(1.05); background: #006bbf; }
+    #cw-toggle svg { width: 22px; height: 22px; fill: white; display: block; }
+
+    /* ── Chat window ── */
+    #cw-window {
+      position: absolute;
+      bottom: 70px;
+      right: 0;
+      width: 380px;
+      height: 520px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+      border: 1px solid #e2e8f0;
+      display: none;
+      flex-direction: column;
+      background: #f7f8fa;
+      animation: cw-pop 0.18s ease;
+    }
+    #cw-window.open { display: flex; }
+
+    @keyframes cw-pop {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+
+    @media (max-width: 480px) {
+      #cw-window { width: calc(100vw - 32px); height: 70vh; }
+    }
+
+    /* ── Header ── */
+    #cw-header {
+      background: #0084e6;
+      color: white;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #cw-header-title { font-size: 14px; font-weight: 700; }
+    #cw-header-sub   { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+    #cw-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 5px;
+      transition: background 0.15s;
+      display: flex;
+      outline: none;
+    }
+    #cw-close:hover { background: rgba(255,255,255,0.18); }
+    #cw-close svg { width: 11px; height: 11px; }
+
+    /* ── Messages area ── */
+    #cw-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 0;
+    }
+    #cw-messages::-webkit-scrollbar { width: 4px; }
+    #cw-messages::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 2px; }
+
+    /* ── Bubble ── */
+    .cw-row { display: flex; margin-bottom: 10px; padding: 0 10px; }
+    .cw-row.user      { justify-content: flex-end; }
+    .cw-row.assistant { justify-content: flex-start; }
+
+    .cw-bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      direction: rtl;
+      text-align: right;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+    }
+    .cw-bubble.user {
+      background: #0084e6;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .cw-bubble.assistant {
+      background: white;
+      color: #2d3748;
+      border-bottom-left-radius: 4px;
+    }
+
+    /* ── Loading dots ── */
+    .cw-loading-row { display: flex; justify-content: flex-start; padding: 0 10px; margin-bottom: 10px; }
+    .cw-loading-bubble {
+      background: white;
+      padding: 11px 15px;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cw-dot {
+      width: 7px; height: 7px;
+      background: #0084e6;
+      border-radius: 50%;
+      animation: cw-bounce 1.2s infinite;
+      opacity: 0.5;
+    }
+    .cw-dot:nth-child(2) { animation-delay: 0.2s; }
+    .cw-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes cw-bounce {
+      0%, 60%, 100% { transform: translateY(0);   opacity: 0.45; }
+      30%            { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ── Slot tags ── */
+    .cw-slots-row { display: flex; justify-content: flex-start; padding: 0 10px; margin-bottom: 10px; }
+    .cw-slots-wrap { max-width: 85%; display: flex; flex-wrap: wrap; gap: 6px; }
+    .cw-slot {
+      background: #ebf8ff;
+      color: #2b6cb0;
+      border: 1px solid #bee3f8;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+      outline: none;
+      border-width: 1px;
+    }
+    .cw-slot:hover { background: #0084e6; color: white; border-color: #0084e6; }
+
+    /* ── Booking card ── */
+    .cw-card-row { display: flex; justify-content: flex-start; padding: 0 10px; margin-bottom: 10px; }
+    .cw-card {
+      max-width: 85%;
+      background: white;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      border: 1px solid #bee3f8;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.09);
+    }
+    .cw-card-head {
+      background: #ebf8ff;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2b6cb0;
+      direction: rtl;
+    }
+    .cw-card-body { padding: 12px 14px; }
+    .cw-field {
+      display: flex;
+      justify-content: space-between;
+      direction: rtl;
+      margin-bottom: 8px;
+    }
+    .cw-field-label { font-size: 11px; color: #718096; }
+    .cw-field-val   { font-size: 13px; font-weight: 600; color: #2d3748; }
+    .cw-card-actions { display: flex; gap: 8px; margin-top: 4px; }
+    .cw-btn-confirm, .cw-btn-cancel {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: background 0.15s, opacity 0.15s;
+      font-family: inherit;
+      outline: none;
+    }
+    .cw-btn-confirm { background: #38a169; color: white; }
+    .cw-btn-confirm:hover { background: #2f855a; }
+    .cw-btn-cancel  { background: white; color: #e53e3e; border: 1px solid #e53e3e; }
+    .cw-btn-cancel:hover  { background: #fff5f5; }
+    .cw-btn-confirm:disabled,
+    .cw-btn-cancel:disabled  { opacity: 0.55; cursor: not-allowed; }
+
+    /* ── Success bubble ── */
+    .cw-success-row { display: flex; justify-content: flex-start; padding: 0 10px; margin-bottom: 10px; }
+    .cw-success {
+      max-width: 85%;
+      background: #f0fff4;
+      border: 1px solid #9ae6b4;
+      border-radius: 14px;
+      border-bottom-left-radius: 4px;
+      padding: 10px 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .cw-success-head {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #276749;
+      margin-bottom: 4px;
+      direction: rtl;
+    }
+    .cw-success-head svg { width: 13px; height: 13px; fill: #38a169; flex-shrink: 0; }
+    .cw-success-text { font-size: 13px; color: #2d3748; white-space: pre-wrap; direction: rtl; text-align: right; }
+
+    /* ── Input area ── */
+    #cw-input-area {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    #cw-input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f7f8fa;
+      font-size: 13px;
+      direction: rtl;
+      text-align: right;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    #cw-input:focus { border-color: #0084e6; background: white; }
+    #cw-input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    #cw-send {
+      width: 38px;
+      height: 38px;
+      background: #0084e6;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+      outline: none;
+    }
+    #cw-send:hover    { background: #006bbf; }
+    #cw-send:disabled { opacity: 0.5; cursor: not-allowed; }
+    #cw-send svg { width: 16px; height: 16px; fill: white; }
+  </style>
+</head>
+<body>
+
+<div id="cw-root">
+
+  <!-- Chat window -->
+  <div id="cw-window" role="dialog" aria-modal="true" aria-label="مساعد الحجز الذكي">
+
+    <div id="cw-header">
+      <div>
+        <div id="cw-header-title">🤖 مساعد الحجز الذكي</div>
+        <div id="cw-header-sub">متصل دايما</div>
+      </div>
+      <button id="cw-close" aria-label="إغلاق">
+        <svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+          <line x1="1" y1="1" x2="13" y2="13" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+          <line x1="13" y1="1" x2="1" y2="13" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="cw-messages" aria-live="polite" aria-relevant="additions"></div>
+
+    <div id="cw-input-area">
+      <input id="cw-input" type="text" placeholder="اكتب رسالتك هنا..." aria-label="رسالة" maxlength="500" />
+      <button id="cw-send" aria-label="إرسال">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Floating toggle -->
+  <button id="cw-toggle" aria-expanded="false" aria-label="فتح المحادثة">
+    <!-- Chat icon -->
+    <svg id="cw-icon-chat" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+    </svg>
+    <!-- Close icon -->
+    <svg id="cw-icon-close" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none">
+      <line x1="4" y1="4" x2="20" y2="20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="20" y1="4" x2="4" y2="20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+</div>
+
+<script>
+(function () {
+  // Resolve API base URL from script tag attribute or default
+  const scripts = document.getElementsByTagName('script');
+  const me = scripts[scripts.length - 1];
+  const API = (me && me.dataset && me.dataset.apiUrl) || '/api';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  const state = {
+    open: false,
+    loading: false,
+    messages: [
+      {
+        role: 'assistant',
+        content:
+          'مرحبا بيك! 👋 أنا المساعد الذكي متاع الصالون. كيفاش نجم نعاونك؟\n\nتنجم تسألني على:\n• الأسعار و الخدمات\n• أوقات العمل\n• حجز موعد',
+      },
+    ],
+  };
+
+  // ── DOM refs ───────────────────────────────────────────────────────────────
+  const win       = document.getElementById('cw-window');
+  const toggle    = document.getElementById('cw-toggle');
+  const closeBtn  = document.getElementById('cw-close');
+  const msgArea   = document.getElementById('cw-messages');
+  const input     = document.getElementById('cw-input');
+  const sendBtn   = document.getElementById('cw-send');
+  const iconChat  = document.getElementById('cw-icon-chat');
+  const iconClose = document.getElementById('cw-icon-close');
+
+  // ── Toggle ─────────────────────────────────────────────────────────────────
+  function toggleChat() {
+    state.open = !state.open;
+    win.classList.toggle('open', state.open);
+    toggle.setAttribute('aria-expanded', String(state.open));
+    toggle.setAttribute('aria-label', state.open ? 'إغلاق المحادثة' : 'فتح المحادثة');
+    iconChat.style.display  = state.open ? 'none'  : 'block';
+    iconClose.style.display = state.open ? 'block' : 'none';
+    if (state.open) {
+      render();
+      input.focus();
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function render() {
+    msgArea.innerHTML = '';
+    state.messages.forEach(function (msg, i) {
+      const nodes = buildMsg(msg, i);
+      if (Array.isArray(nodes)) {
+        nodes.forEach(function (n) { msgArea.appendChild(n); });
+      } else {
+        msgArea.appendChild(nodes);
+      }
+    });
+    if (state.loading) msgArea.appendChild(buildLoading());
+    msgArea.scrollTop = msgArea.scrollHeight;
+  }
+
+  function buildMsg(msg, i) {
+    if (msg.action === 'confirm_booking' && msg.bookingData) return buildCard(msg, i);
+    if (msg.action === 'booking_confirmed')                   return buildSuccess(msg);
+    if (msg.action === 'show_slots' && msg.slots && msg.slots.length) {
+      return [buildBubble(msg.content, false), buildSlots(msg.slots)];
+    }
+    return buildBubble(msg.content, msg.role === 'user');
+  }
+
+  function buildBubble(text, isUser) {
+    var row    = el('div', 'cw-row ' + (isUser ? 'user' : 'assistant'));
+    var bubble = el('div', 'cw-bubble ' + (isUser ? 'user' : 'assistant'));
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    return row;
+  }
+
+  function buildSlots(slots) {
+    var row  = el('div', 'cw-slots-row');
+    var wrap = el('div', 'cw-slots-wrap');
+    slots.forEach(function (slot) {
+      var btn = el('button', 'cw-slot');
+      btn.textContent = slot;
+      btn.addEventListener('click', function () { handleSend(slot); });
+      wrap.appendChild(btn);
+    });
+    row.appendChild(wrap);
+    return row;
+  }
+
+  function buildCard(msg, index) {
+    var d   = msg.bookingData;
+    var row = el('div', 'cw-card-row');
+    var card = el('div', 'cw-card');
+
+    var head = el('div', 'cw-card-head');
+    head.textContent = '📋 تأكيد الحجز';
+    card.appendChild(head);
+
+    var body = el('div', 'cw-card-body');
+
+    [
+      ['الاسم',   d.name],
+      ['التاريخ', d.date],
+      ['الوقت',   d.time],
+    ].forEach(function (pair) {
+      var field = el('div', 'cw-field');
+      var label = el('span', 'cw-field-label'); label.textContent = pair[0];
+      var val   = el('span', 'cw-field-val');   val.textContent   = pair[1];
+      field.appendChild(label);
+      field.appendChild(val);
+      body.appendChild(field);
+    });
+
+    if (!msg.decided) {
+      var actions = el('div', 'cw-card-actions');
+
+      var btnOk  = el('button', 'cw-btn-confirm');
+      btnOk.textContent = '✓ أكّد';
+
+      var btnNo  = el('button', 'cw-btn-cancel');
+      btnNo.textContent = '✕ إلغاء';
+
+      btnOk.addEventListener('click', function () {
+        btnOk.disabled = true;
+        btnNo.disabled = true;
+        btnOk.textContent = '...';
+        doConfirmBooking(index, msg.bookingData, function () {
+          /* render called inside */
+        });
+      });
+
+      btnNo.addEventListener('click', function () {
+        doCancelBooking(index);
+      });
+
+      actions.appendChild(btnOk);
+      actions.appendChild(btnNo);
+      body.appendChild(actions);
+    }
+
+    card.appendChild(body);
+    row.appendChild(card);
+    return row;
+  }
+
+  function buildSuccess(msg) {
+    var row = el('div', 'cw-success-row');
+    var box = el('div', 'cw-success');
+
+    var head = el('div', 'cw-success-head');
+    head.innerHTML =
+      '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>' +
+      '</svg>تم التأكيد';
+
+    var text = el('div', 'cw-success-text');
+    text.textContent = msg.content;
+
+    box.appendChild(head);
+    box.appendChild(text);
+    row.appendChild(box);
+    return row;
+  }
+
+  function buildLoading() {
+    var row = el('div', 'cw-loading-row');
+    var bub = el('div', 'cw-loading-bubble');
+    for (var i = 0; i < 3; i++) bub.appendChild(el('div', 'cw-dot'));
+    row.appendChild(bub);
+    return row;
+  }
+
+  // ── API calls ──────────────────────────────────────────────────────────────
+  function handleSend(text) {
+    var msg = (text !== undefined ? text : input.value).trim();
+    if (!msg || state.loading) return;
+    input.value = '';
+
+    state.messages.push({ role: 'user', content: msg });
+    state.loading = true;
+    setDisabled(true);
+    render();
+
+    var history = state.messages
+      .slice(1, state.messages.length - 1)
+      .map(function (m) { return { role: m.role, content: m.content }; });
+
+    fetch(API + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, history: history }),
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        state.messages.push({
+          role: 'assistant',
+          content: data.reply,
+          action: data.action,
+          bookingData: data.bookingData,
+          slots: data.slots,
+        });
+      })
+      .catch(function () {
+        state.messages.push({
+          role: 'assistant',
+          content: '⚠️ صار مشكل في الاتصال. عاود حاول من بعد.',
+        });
+      })
+      .finally(function () {
+        state.loading = false;
+        setDisabled(false);
+        render();
+        input.focus();
+      });
+  }
+
+  function doConfirmBooking(index, bookingData, cb) {
+    fetch(API + '/chat/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bookingData),
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        state.messages[index].decided = true;
+        state.messages.push({
+          role: 'assistant',
+          content: data.reply,
+          action: 'booking_confirmed',
+        });
+      })
+      .catch(function () {
+        state.messages.push({
+          role: 'assistant',
+          content: '⚠️ صار مشكل في تأكيد الحجز. عاود حاول.',
+        });
+      })
+      .finally(function () {
+        render();
+        if (cb) cb();
+      });
+  }
+
+  function doCancelBooking(index) {
+    state.messages[index].decided = true;
+    state.messages.push({
+      role: 'assistant',
+      content: '🚫 تم إلغاء الحجز. إذا تحب تحجز وقت آخر قلّي.',
+    });
+    render();
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function el(tag, cls) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    return e;
+  }
+
+  function setDisabled(v) {
+    input.disabled   = v;
+    sendBtn.disabled = v;
+  }
+
+  // ── Events ─────────────────────────────────────────────────────────────────
+  toggle.addEventListener('click', toggleChat);
+  closeBtn.addEventListener('click', toggleChat);
+  sendBtn.addEventListener('click', function () { handleSend(); });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  });
+
+  // Initial render (populates welcome message, hidden until opened)
+  render();
+
+  // ── Public API ─────────────────────────────────────────────────────────────
+  window.AiBookingWidget = {
+    open:  function () { if (!state.open) toggleChat(); },
+    close: function () { if (state.open)  toggleChat(); },
+  };
+})();
+</script>
+
+</body>
+</html>

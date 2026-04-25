@@ -1,12 +1,12 @@
 ﻿import { useEffect, useState, useMemo } from "react";
 import {
   Box, Heading, Text, useToast, Spinner, HStack, IconButton,
-  Button, Select, Grid, GridItem, VStack, Badge, Tooltip,
+  Button, Select, Grid, GridItem, VStack,
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody,
   ModalFooter, ModalCloseButton, useDisclosure, FormControl, FormLabel,
   Flex, Icon,
 } from "@chakra-ui/react";
-import { ChevronLeftIcon, ChevronRightIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
+import { ChevronLeftIcon, ChevronRightIcon, DeleteIcon } from "@chakra-ui/icons";
 import { FiClock, FiCheck } from "react-icons/fi";
 import { useTranslation } from "../i18n";
 import {
@@ -127,37 +127,41 @@ export default function AvailabilityPage() {
 
   return (
     <Box>
-      <Heading size="lg" mb={2}>{t.availability.title}</Heading>
-      <Text color="gray.500" mb={6} fontSize="sm">{t.availability.clickToAdd}</Text>
+      <Heading size="lg" mb={2} fontWeight="700" color="gray.900">{t.availability.title}</Heading>
+      <Text color="gray.400" mb={6} fontSize="sm">{t.availability.clickToAdd}</Text>
 
       {/* Calendar Header */}
-      <Box bg="white" borderRadius="xl" shadow="sm" overflow="hidden" border="1px solid" borderColor="gray.100">
-        <HStack justify="space-between" px={6} py={4} bg="brand.500">
+      <Box bg="white" borderRadius="16px" shadow="sm" overflow="hidden" border="1px solid" borderColor="gray.100">
+        <HStack justify="space-between" px={6} py={4} borderBottom="1px solid" borderColor="gray.100">
           <IconButton
             aria-label="Previous"
             icon={lang === "ar" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
             onClick={prevMonth}
-            variant="ghost"
-            color="white"
-            _hover={{ bg: "brand.600" }}
+            variant="outline"
             size="sm"
+            borderRadius="8px"
+            color="gray.500"
+            borderColor="gray.200"
+            _hover={{ bg: "gray.50" }}
           />
           <HStack spacing={3}>
-            <Button variant="ghost" color="white" size="sm" onClick={goToday} _hover={{ bg: "brand.600" }}>
+            <Button variant="ghost" size="sm" onClick={goToday} borderRadius="8px" fontSize="xs" color="gray.500" _hover={{ bg: "gray.100" }}>
               {t.availability.today}
             </Button>
-            <Heading size="md" color="white" fontWeight="600">
+            <Text fontSize="15px" fontWeight="700" color="gray.900" letterSpacing="-0.02em">
               {t.availability.monthNames[viewMonth]} {viewYear}
-            </Heading>
+            </Text>
           </HStack>
           <IconButton
             aria-label="Next"
             icon={lang === "ar" ? <ChevronLeftIcon /> : <ChevronRightIcon />}
             onClick={nextMonth}
-            variant="ghost"
-            color="white"
-            _hover={{ bg: "brand.600" }}
+            variant="outline"
             size="sm"
+            borderRadius="8px"
+            color="gray.500"
+            borderColor="gray.200"
+            _hover={{ bg: "gray.50" }}
           />
         </HStack>
 
@@ -165,7 +169,7 @@ export default function AvailabilityPage() {
         <Grid templateColumns="repeat(7, 1fr)" bg="gray.50" borderBottom="1px solid" borderColor="gray.100">
           {t.availability.dayNames.map((day: string) => (
             <GridItem key={day} py={3} textAlign="center">
-              <Text fontSize="xs" fontWeight="600" color="gray.500" textTransform="uppercase">
+              <Text fontSize="2xs" fontWeight="700" color="gray.400" textTransform="uppercase" letterSpacing="wider">
                 {day}
               </Text>
             </GridItem>
@@ -197,7 +201,7 @@ export default function AvailabilityPage() {
                 borderColor="gray.50"
                 cursor={isPast ? "default" : "pointer"}
                 onClick={() => !isPast && handleDayClick(dateStr)}
-                bg={config ? "brand.50" : isToday ? "blue.50" : "white"}
+                bg={config ? "brand.50" : isToday ? "purple.50" : "white"}
                 _hover={isPast ? {} : { bg: config ? "brand.100" : "gray.50" }}
                 transition="background 0.15s"
                 opacity={isPast ? 0.5 : 1}
